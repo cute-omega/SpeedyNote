@@ -24,7 +24,7 @@ echo ""
 # - Remove container on exit (--rm)
 # - Mount project directory (-v)
 # - Mount .gradle cache for faster builds (-v)
-docker run -it --rm \
+docker run --rm \
     -v "${PROJECT_ROOT}:/workspace" \
     -v "${HOME}/.gradle:/root/.gradle" \
     -w /workspace \
