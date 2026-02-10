@@ -1,0 +1,72 @@
+name: Build SpeedyNote for Android
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  # job 1
+  build-and-upload:
+    name: Build Android APK
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Build docker image
+      run: ./android/docker-build.sh
+
+    - name: Verify docker image
+      run: docker images | grep speedynote-android
+      
+    - name: Enter docker container
+      run: ./android/docker-shell.sh
+
+    - name: Inside container build MuPDF
+      run: ./android/build-mupdf.sh
+
+    - name: Build SpeedyNote APK
+      run: ./android/build-speedynote.sh
+
+    - name: Show files
+      run: ls -alh ./android
+      
+    - name: Upload APK file
+      uses: actions/upload-artifact@v4.4.0
+      with:
+        path: ./android/SpeedyNote.apk
+        name: SpeedyNote.apk
+        if-no-files-found: error
+
+  # job 2
+  download-and-release:
+    runs-on: ubuntu-22.04
+    needs: build-and-upload
+    steps:
+      - name: Checkout
+        uses: actions/checkout@4.1.7
+
+      - name: Make release dir
+        run: mkdir release
+      
+      - name: Download SpeedyNote.apk
+        uses: actions/download-artifact@v4.1.8
+        with:
+          name: SpeedyNote.apk
+          path: release
+
+      - name: Print files in release dir
+        run: ls release -alh
+
+      - name: Create a draft release
+        uses: wangliang181230/github-action-ghr@master
+        env:
+          GITHUB_TOKEN: ${{github.token}}
+          GHR_PATH: release/
+          GHR_TITLE: ${{github.ref_name}}
+          GHR_REPLACE: true
+          GHR_DRAFT: true
+      
