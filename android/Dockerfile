@@ -210,11 +210,11 @@ RUN echo "" && \
     echo "" && \
     echo "androiddeployqt:" && \
     ls -lh ${QT_HOST}/bin/androiddeployqt && \
-    (${QT_HOST}/bin/androiddeployqt --version 2>&1 | head -3) || echo "  (version output not available)" && \
+    (${QT_HOST}/bin/androiddeployqt --version 2>&1 | head -5) || echo "  (version output not available)" && \
     echo "" && \
     echo "moc:" && \
     ls -lh ${QT_HOST}/bin/moc && \
-    (${QT_HOST}/bin/moc -v 2>&1) || echo "  (version output not available)" && \
+    (${QT_HOST}/bin/moc -v 2>&1 | head -5) || echo "  (version output not available)" && \
     echo "" && \
     echo "--- Sample Qt Android Binaries ---" && \
     echo "Qt Android arm64-v8a binaries (sample):" && \
