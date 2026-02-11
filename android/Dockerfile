@@ -205,16 +205,16 @@ RUN echo "" && \
     echo "" && \
     echo "--- Qt Host Tools ---" && \
     echo "qmake:" && \
-    ${QT_HOST}/bin/qmake --version && \
     ls -lh ${QT_HOST}/bin/qmake && \
+    ${QT_HOST}/bin/qmake --version && \
     echo "" && \
     echo "androiddeployqt:" && \
     ls -lh ${QT_HOST}/bin/androiddeployqt && \
-    ${QT_HOST}/bin/androiddeployqt --version 2>&1 | head -3 || echo "  (androiddeployqt version output not available)" && \
+    (${QT_HOST}/bin/androiddeployqt --version 2>&1 | head -3) || echo "  (version output not available)" && \
     echo "" && \
     echo "moc:" && \
-    ${QT_HOST}/bin/moc -v 2>&1 || echo "  (moc version output not available)" && \
     ls -lh ${QT_HOST}/bin/moc && \
+    (${QT_HOST}/bin/moc -v 2>&1) || echo "  (version output not available)" && \
     echo "" && \
     echo "--- Sample Qt Android Binaries ---" && \
     echo "Qt Android arm64-v8a binaries (sample):" && \
