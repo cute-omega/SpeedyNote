@@ -131,16 +131,101 @@ RUN /opt/aqt-venv/bin/aqt install-qt linux desktop ${QT_VERSION} linux_gcc_64 \
     --modules qtimageformats
 
 # =============================================================================
-# Verify Installation
+# Verify Toolchain Files
 # =============================================================================
-RUN echo "=== Verifying installation ===" && \
-    echo "Android SDK: $(ls ${ANDROID_SDK_ROOT}/platforms/)" && \
-    echo "Android NDK: $(ls ${ANDROID_SDK_ROOT}/ndk/)" && \
-    echo "Qt Android arm64: $(ls ${QT_ANDROID}/bin/ | head -5)" && \
-    echo "Qt Android armv7: $(ls ${QT_ANDROID_ARMV7}/bin/ | head -5)" && \
-    echo "Qt Host: $(${QT_HOST}/bin/qmake --version)" && \
-    echo "CMake: $(cmake --version | head -1)" && \
-    echo "Java: $(java --version | head -1)"
+# Explicitly check for the existence of Qt Android toolchain files.
+# These are critical for CMake builds and must be present after installation.
+RUN echo "=== Checking Qt Android Toolchain Files ===" && \
+    TOOLCHAIN_ARM64="${QT_ANDROID}/lib/cmake/Qt6/qt.toolchain.cmake" && \
+    TOOLCHAIN_ARMV7="${QT_ANDROID_ARMV7}/lib/cmake/Qt6/qt.toolchain.cmake" && \
+    echo "Checking: ${TOOLCHAIN_ARM64}" && \
+    if [ -f "${TOOLCHAIN_ARM64}" ]; then \
+        echo "  ✓ arm64-v8a toolchain file exists"; \
+    else \
+        echo "  ✗ ERROR: arm64-v8a toolchain file NOT FOUND"; \
+        echo "  Expected location: ${TOOLCHAIN_ARM64}"; \
+        echo "  This will cause CMake builds to fail!"; \
+        exit 1; \
+    fi && \
+    echo "Checking: ${TOOLCHAIN_ARMV7}" && \
+    if [ -f "${TOOLCHAIN_ARMV7}" ]; then \
+        echo "  ✓ armeabi-v7a toolchain file exists"; \
+    else \
+        echo "  ✗ ERROR: armeabi-v7a toolchain file NOT FOUND"; \
+        echo "  Expected location: ${TOOLCHAIN_ARMV7}"; \
+        echo "  This will cause CMake builds to fail!"; \
+        exit 1; \
+    fi && \
+    echo "All toolchain files verified successfully."
+
+# =============================================================================
+# Verify Installation and Print Diagnostics
+# =============================================================================
+RUN echo "" && \
+    echo "=============================================================================" && \
+    echo "Build Environment Diagnostic Information" && \
+    echo "=============================================================================" && \
+    echo "" && \
+    echo "--- Qt Installation Paths ---" && \
+    echo "Qt Version: ${QT_VERSION}" && \
+    echo "Qt Root: ${QT_ROOT}" && \
+    echo "Qt Android arm64-v8a: ${QT_ANDROID}" && \
+    echo "Qt Android armeabi-v7a: ${QT_ANDROID_ARMV7}" && \
+    echo "Qt Host (Linux x86_64): ${QT_HOST}" && \
+    echo "" && \
+    echo "--- Qt Android Toolchain Files ---" && \
+    echo "arm64-v8a toolchain: ${QT_ANDROID}/lib/cmake/Qt6/qt.toolchain.cmake" && \
+    ls -lh "${QT_ANDROID}/lib/cmake/Qt6/qt.toolchain.cmake" && \
+    echo "armeabi-v7a toolchain: ${QT_ANDROID_ARMV7}/lib/cmake/Qt6/qt.toolchain.cmake" && \
+    ls -lh "${QT_ANDROID_ARMV7}/lib/cmake/Qt6/qt.toolchain.cmake" && \
+    echo "" && \
+    echo "--- Android SDK and NDK ---" && \
+    echo "ANDROID_SDK_ROOT: ${ANDROID_SDK_ROOT}" && \
+    echo "ANDROID_NDK_ROOT: ${ANDROID_NDK_ROOT}" && \
+    echo "NDK Version: ${NDK_VERSION}" && \
+    echo "Installed SDK Platforms:" && \
+    ls -1 ${ANDROID_SDK_ROOT}/platforms/ && \
+    echo "Installed NDK Versions:" && \
+    ls -1 ${ANDROID_SDK_ROOT}/ndk/ && \
+    echo "NDK Location:" && \
+    ls -ld ${ANDROID_NDK_ROOT} && \
+    echo "" && \
+    echo "--- Build Tools ---" && \
+    echo "CMake:" && \
+    cmake --version | head -1 && \
+    which cmake && \
+    echo "" && \
+    echo "Ninja:" && \
+    ninja --version && \
+    which ninja && \
+    echo "" && \
+    echo "Java:" && \
+    java --version | head -1 && \
+    echo "JAVA_HOME: ${JAVA_HOME}" && \
+    echo "" && \
+    echo "--- Qt Host Tools ---" && \
+    echo "qmake:" && \
+    ${QT_HOST}/bin/qmake --version && \
+    ls -lh ${QT_HOST}/bin/qmake && \
+    echo "" && \
+    echo "androiddeployqt:" && \
+    ls -lh ${QT_HOST}/bin/androiddeployqt && \
+    ${QT_HOST}/bin/androiddeployqt --version 2>&1 | head -3 || echo "  (androiddeployqt version output not available)" && \
+    echo "" && \
+    echo "moc:" && \
+    ${QT_HOST}/bin/moc -v 2>&1 || echo "  (moc version output not available)" && \
+    ls -lh ${QT_HOST}/bin/moc && \
+    echo "" && \
+    echo "--- Sample Qt Android Binaries ---" && \
+    echo "Qt Android arm64-v8a binaries (sample):" && \
+    ls ${QT_ANDROID}/bin/ | head -5 && \
+    echo "Qt Android armeabi-v7a binaries (sample):" && \
+    ls ${QT_ANDROID_ARMV7}/bin/ | head -5 && \
+    echo "" && \
+    echo "=============================================================================" && \
+    echo "Build Environment Ready" && \
+    echo "=============================================================================" && \
+    echo ""
 
 # =============================================================================
 # Workspace Setup
